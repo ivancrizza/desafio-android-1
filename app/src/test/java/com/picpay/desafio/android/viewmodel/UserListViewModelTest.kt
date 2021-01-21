@@ -1,56 +1,59 @@
 package com.picpay.desafio.android.viewmodel
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.picpay.desafio.android.PicPayRepository
-import com.picpay.desafio.android.base.BaseAcTest
 import com.picpay.desafio.android.model.User
+import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.*
 
-class UserListViewModelTest : BaseAcTest() {
+class UserListViewModelTest  {
+
+    @get:Rule
+    val instantExecutorRule = InstantTaskExecutorRule()
+
+    @ExperimentalCoroutinesApi
+    private val testCoroutineDispatcher = TestCoroutineDispatcher()
 
     @MockK
     lateinit var repository: PicPayRepository
 
-    @MockK
     lateinit var viewModel: UserListViewModel
 
+    val users = mockk<List<User>>()
 
-    val users = mockk<User> {
-        every { name } returns "Aldo"
-        every { id } returns 2
-        every { img } returns "imageTest"
-        every { username } returns "Aldo.Alvez"
-
-    }
-
+    @ExperimentalCoroutinesApi
     @Before
-    fun setUp() {
-
-
+    fun setup() {
+        Dispatchers.setMain(Dispatchers.Unconfined)
+        MockKAnnotations.init(this, relaxUnitFun = true)
+        viewModel = UserListViewModel(testCoroutineDispatcher, repository)
     }
 
-    override fun baseSetUp() {
-        super.baseSetUp()
-        viewModel = UserListViewModel(
-            repository
-        )
+    @ExperimentalCoroutinesApi
+    @After
+    fun tearDown() {
+        testCoroutineDispatcher.cleanupTestCoroutines()
+        Dispatchers.resetMain()
     }
 
     @Test
     fun getAllContactsList() {
+        coEvery { repository.getUsers() } returns (users)
         runBlocking {
             viewModel.getUsers()
         }
-
-        coEvery { repository.getUsers() } returns (listOf(users))
-
-        Assert.assertEquals(UserListViewModel.UserListState.Success(listOf(users)),viewModel.userlisState.value)
-
+        Assert.assertEquals(
+            UserListViewModel.UserListState.Success(users),
+            viewModel.userList.value
+        )
     }
 }

@@ -1,19 +1,22 @@
 package com.picpay.desafio.android.viewmodel
 
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.picpay.desafio.android.PicPayRepository
-import com.picpay.desafio.android.R
-import com.picpay.desafio.android.infrastructure.BaseAcViewModel
-import com.picpay.desafio.android.infrastructure.coroutines.AppContextProvider
 import com.picpay.desafio.android.model.User
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+class UserListViewModel(
+    private val dispatcher: CoroutineDispatcher,
+    private val repository: PicPayRepository
+) : ViewModel() {
 
-class UserListViewModel(private val repository: PicPayRepository) : BaseAcViewModel() {
+    private var _userListState = MutableLiveData<UserListState>()
+    val userList = _userListState
 
-    var userlisState = MutableLiveData<UserListState>()
 
     sealed class UserListState {
         data class Success(val users: List<User>) : UserListState()
@@ -22,31 +25,17 @@ class UserListViewModel(private val repository: PicPayRepository) : BaseAcViewMo
     }
 
     fun getUsers() {
-        launch {
-            userlisState.postValue(UserListState.Loading(true))
+        viewModelScope.launch {
+            _userListState.value = (UserListState.Loading(true))
             try {
-                val result = repository.getUsers()
-                onSuccessList(result)
-                userlisState.postValue(UserListState.Loading(false))
-            } catch (error: Throwable) {
-                onErrorList(R.string.error.toString())
+                val result = withContext(dispatcher) {
+                    repository.getUsers()
+                }
+                _userListState.value = (UserListState.Success(result))
 
+            } catch (error: Throwable) {
+                _userListState.value = (UserListState.Error(error.message.toString()))
             }
         }
-
     }
-
-    private suspend fun onSuccessList(users: List<User>) {
-        withContext(AppContextProvider.main) {
-            userlisState.postValue(UserListState.Success(users))
-        }
-    }
-
-    private suspend fun onErrorList(message: String) {
-        withContext(AppContextProvider.main) {
-            userlisState.postValue(UserListState.Error(message))
-        }
-    }
-
-
 }

@@ -1,8 +1,8 @@
 package com.picpay.desafio.android.view
 
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -35,21 +35,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun initObserver() {
 
-        viewModel.userlisState.observe(this, Observer<UserListViewModel.UserListState> {
+        viewModel.userList.observe(this, Observer<UserListViewModel.UserListState> {
             when (it) {
                 is UserListViewModel.UserListState.Success -> {
-                    updateListOfUsers(it.users as MutableList<User>)
+                    updateListOfUsers(it.users.toMutableList() )
                 }
                 is UserListViewModel.UserListState.Error -> {
                     errorMessage(R.string.error.toString())
                 }
                 is UserListViewModel.UserListState.Loading -> {
-                    loadinState(it.loading)
-
+                    loadingState(it.loading)
                 }
-               else -> {
-               }
-
             }
         })
     }
@@ -62,16 +58,8 @@ class MainActivity : AppCompatActivity() {
         Snackbar.make(recyclerView, error, Snackbar.LENGTH_SHORT).show()
     }
 
-    private fun loadinState(show: Boolean) {
-        when {
-            show -> {
-                user_list_progress_bar.visibility = View.VISIBLE
-            }
-            else -> {
-                user_list_progress_bar.visibility = View.GONE
-            }
-
-        }
+    private fun loadingState(show: Boolean) {
+        user_list_progress_bar.isVisible = show
     }
 
 }
