@@ -15,7 +15,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.*
 
-class UserListViewModelTest  {
+class UserListViewModelTest {
 
     @get:Rule
     val instantExecutorRule = InstantTaskExecutorRule()
@@ -46,7 +46,7 @@ class UserListViewModelTest  {
     }
 
     @Test
-    fun getAllContactsList() {
+    fun getAllContactsListShouldPresentOnScreen() {
         coEvery { repository.getUsers() } returns (users)
         runBlocking {
             viewModel.getUsers()
@@ -55,5 +55,15 @@ class UserListViewModelTest  {
             UserListViewModel.UserListState.Success(users),
             viewModel.userList.value
         )
+    }
+
+    @Test
+    fun getAllContactsListShouldPresentAnError() {
+        val error = mockk<Throwable>(relaxed = true)
+        coEvery { repository.getUsers() } throws error
+        runBlocking {
+            viewModel.getUsers()
+        }
+        Assert.assertEquals(UserListViewModel.UserListState.Error(error.message.toString()), viewModel.userList.value)
     }
 }

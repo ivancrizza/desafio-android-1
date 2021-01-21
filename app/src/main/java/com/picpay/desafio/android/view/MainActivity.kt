@@ -38,10 +38,10 @@ class MainActivity : AppCompatActivity() {
         viewModel.userList.observe(this, Observer<UserListViewModel.UserListState> {
             when (it) {
                 is UserListViewModel.UserListState.Success -> {
-                    updateListOfUsers(it.users.toMutableList() )
+                    updateListOfUsers(it.users.toMutableList())
                 }
                 is UserListViewModel.UserListState.Error -> {
-                    errorMessage(R.string.error.toString())
+                    errorMessage(getString(R.string.error))
                 }
                 is UserListViewModel.UserListState.Loading -> {
                     loadingState(it.loading)
